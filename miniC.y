@@ -1,4 +1,4 @@
-%token IF FUNC ELSE WHILE RETURN INT VOID EXTERN WORD OP ARITH NUM PRINT READ
+%token IF FUNC ELSE WHILE RETURN INT VOID EXTERN WORD OP NUMP PRINT READ
 
 %{
 #include <stdio.h>
@@ -13,9 +13,14 @@ extern char* yytext;
 %start CODE
 %nonassoc TAG
 %nonassoc ELSE
+%nonassoc UMINUS
+%nonassoc UNEG
+
 
 %%
 VarDec : INT WORD ';'
+ARITH : '+' | '*' | '/' | '-' %prec UMINUS
+NUM : NUMP | '-' NUMP %prec UNEG | '(' NUM ')'
 ExFunc : EXTERN VOID PRINT '(' INT ')' ';' | EXTERN INT READ '(' ')' ';'
 AROP : WORD ARITH WORD | WORD ARITH NUM | NUM ARITH WORD | NUM ARITH NUM
 BOP : WORD OP WORD | WORD OP NUM | NUM OP WORD | NUM OP NUM
@@ -28,6 +33,7 @@ CreateFunc : INT FUNC '(' INT WORD ')' '{' CODE '}'
 WhileLoop : WHILE '(' BOP ')' '{' CODE '}'
 CODE : CODE WhileLoop | CODE ASSIGN | CODE Conditional | CODE Ret | CODE PRINTFunc | CODE READFunc | CODE ExFunc | CODE CreateFunc | CODE VarDec
 		| VarDec | ASSIGN | Conditional | Ret | PRINTFunc | READFunc | ExFunc | WhileLoop
+
 %%
 
 int main(int argc, char** argv){

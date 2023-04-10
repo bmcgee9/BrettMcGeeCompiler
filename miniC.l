@@ -10,8 +10,14 @@ alphanum [a-zA-Z0-9]
 num [0-9]
 
 %%
-(\+)|(\*)|(\\)|(-) {printf("%s", yytext); 
-			 return ARITH;}
+"\+" {printf("%s", yytext);
+	   return yytext[0];}
+"\*" {printf("%s", yytext);
+	   return yytext[0];}
+"\\" {printf("%s", yytext);
+	   return yytext[0];}
+"-" {printf("%s", yytext);
+	   return yytext[0];}
 "if" {printf("%s", yytext); 
 			 return IF;}
 "else" {printf("%s", yytext); 
@@ -35,7 +41,7 @@ num [0-9]
 {letter}{alphanum}* {printf("%s", yytext); 
 						return WORD;}
 {num}+ {printf("%s", yytext); 
-			 return NUM;}
+			 return NUMP;}
 >|<|==|<=|>= {printf("%s", yytext); return OP;}//gets operators
 "{" {printf("%s", yytext); 
 		return yytext[0];}
