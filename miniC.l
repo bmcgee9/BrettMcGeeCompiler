@@ -39,30 +39,34 @@ num [0-9]
 "func" {printf("%s", yytext); 
 			 return FUNC;}
 {letter}{alphanum}* {printf("%s", yytext); 
-						return WORD;}
-{num}+ {printf("%s", yytext); 
-			 return NUMP;}
->|<|==|<=|>= {printf("%s", yytext); return OP;}//gets operators
+						return VAR;}
+[1-9]{num}* {printf("%s", yytext); 
+			 return NUM;}
+">" {printf("%s", yytext); 
+		return yytext[0];}
+"<" {printf("%s", yytext); 
+		return yytext[0];}
+"==" {printf("%s", yytext); 
+		return EQ;}
+"<=" {printf("%s", yytext); 
+		return LE;}
+">=" {printf("%s", yytext); 
+		return GE;}
 "{" {printf("%s", yytext); 
 		return yytext[0];}
 "}" {printf("%s", yytext); 
 		return yytext[0];}
-"("	{printf("%s", yytext); 
+"(" {printf("%s", yytext); 
 		return yytext[0];}
-")"	{printf("%s", yytext); 
-       return yytext[0];}
+")" {printf("%s", yytext); 
+		return yytext[0];}
 ";" {printf("%s", yytext); 
-       return yytext[0];}
-"=" {printf("%s", yytext);
-	   return yytext[0];}
-.|[ \t\n] {printf("%s", yytext);} //ignores whitespace
+		return yytext[0];}
+"=" {printf("%s", yytext); 
+		return yytext[0];}
+.|[ \t\n] {printf("%s", yytext);} 
 %%
 
 int yywrap(){
 	return(1);
 }
-
-/*int main(){
-	yylex();
-	return(0);
-}*/

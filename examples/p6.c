@@ -8,6 +8,6 @@ int func(int i){
 	while (a < i){
 		int a;
 		a = read();
-		b = 10 + a;
+		b = 10 + (-a);
 	}
 }

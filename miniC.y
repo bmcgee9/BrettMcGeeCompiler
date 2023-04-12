@@ -1,4 +1,4 @@
-%token IF FUNC ELSE WHILE RETURN INT VOID EXTERN WORD OP NUMP PRINT READ
+%token IF FUNC ELSE WHILE RETURN INT VOID EXTERN VAR EQ LE GE NUM PRINT READ
 
 %{
 #include <stdio.h>
@@ -10,30 +10,69 @@ extern int yylineno;
 extern char* yytext;
 %}
 
-%start CODE
-%nonassoc TAG
+%start program
+%nonassoc IFX
 %nonassoc ELSE
+%left '+' '-'
+%left '*' '/'
 %nonassoc UMINUS
-%nonassoc UNEG
-
 
 %%
-VarDec : INT WORD ';'
-ARITH : '+' | '*' | '/' | '-' %prec UMINUS
-NUM : NUMP | '-' NUMP %prec UNEG | '(' NUM ')'
-ExFunc : EXTERN VOID PRINT '(' INT ')' ';' | EXTERN INT READ '(' ')' ';'
-AROP : WORD ARITH WORD | WORD ARITH NUM | NUM ARITH WORD | NUM ARITH NUM
-BOP : WORD OP WORD | WORD OP NUM | NUM OP WORD | NUM OP NUM
-Ret : RETURN '(' AROP ')' ';' | RETURN '(' WORD ')' ';' | RETURN '(' NUM ')' ';'
-ASSIGN : WORD '=' AROP ';' | WORD '=' WORD ';' | WORD '=' NUM ';' | WORD '=' READFunc ';'
-Conditional : IF '(' BOP ')' '{' CODE '}' ELSE '{' CODE '}' | IF '(' BOP ')' ASSIGN | IF '(' BOP ')' Ret | IF '(' BOP ')' PRINTFunc | IF '(' BOP ')' READFunc | IF '(' BOP ')' '{' CODE '}' %prec TAG
-PRINTFunc : PRINT '(' WORD ')' ';'
-READFunc : READ '(' ')'
-CreateFunc : INT FUNC '(' INT WORD ')' '{' CODE '}'
-WhileLoop : WHILE '(' BOP ')' '{' CODE '}'
-CODE : CODE WhileLoop | CODE ASSIGN | CODE Conditional | CODE Ret | CODE PRINTFunc | CODE READFunc | CODE ExFunc | CODE CreateFunc | CODE VarDec
-		| VarDec | ASSIGN | Conditional | Ret | PRINTFunc | READFunc | ExFunc | WhileLoop
+term: VAR | NUM
 
+expr:
+ term
+ | '-' expr %prec UMINUS 
+ | expr '+' expr 
+ | expr '-' expr 
+ | expr '*' expr 
+ | expr '/' expr 
+ | '(' expr ')'
+
+condition: 
+	expr '>' expr
+	| expr '<' expr
+	| expr EQ expr
+	| expr GE expr
+	| expr LE expr
+	| '(' condition ')'
+
+asgn_stmt: VAR '=' expr ';' | VAR '=' READ '(' ')' ';'
+
+if_stmt: IF condition stmt %prec IFX
+if_else_stmt: IF condition stmt  ELSE stmt
+while_loop: WHILE condition stmt
+call_statement: PRINT expr ';'
+return_statement: RETURN expr ';'
+
+stmt: asgn_stmt
+	| if_stmt
+	| if_else_stmt
+	| while_loop
+	| block_stmt
+	| call_statement
+	| return_statement
+
+stmts: stmts stmt | stmt
+
+decl: INT VAR ';'
+
+var_decls: var_decls decl
+	| /* empty */
+
+block_stmt: '{' var_decls stmts '}'
+
+func_header: INT FUNC '(' INT VAR ')'
+
+function_def: func_header block_stmt
+
+extern_read: EXTERN INT READ '(' ')' ';'
+
+extern_print: EXTERN VOID PRINT '(' INT ')' ';'
+
+extern: extern_print extern_read | extern_read extern_print
+
+program: extern function_def
 %%
 
 int main(int argc, char** argv){
