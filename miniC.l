@@ -1,6 +1,7 @@
 %{
 #include <stdio.h>
 #include <math.h>
+#include "ast.h"
 #include "y.tab.h"
 %}
 
@@ -38,9 +39,11 @@ num [0-9]
 			 return READ;}
 "func" {printf("%s", yytext); 
 			 return FUNC;}
-{letter}{alphanum}* {printf("%s", yytext); 
+{letter}{alphanum}* {printf("%s", yytext);
+						yylval.sname = strdup(yytext);
 						return VAR;}
-[1-9]{num}* {printf("%s", yytext); 
+[1-9]{num}* {printf("%s", yytext);
+			 yylval.ival = atoi(yytext);
 			 return NUM;}
 ">" {printf("%s", yytext); 
 		return yytext[0];}
@@ -52,6 +55,8 @@ num [0-9]
 		return LE;}
 ">=" {printf("%s", yytext); 
 		return GE;}
+"!=" {printf("%s", yytext);
+		return NEQ;}
 "{" {printf("%s", yytext); 
 		return yytext[0];}
 "}" {printf("%s", yytext); 

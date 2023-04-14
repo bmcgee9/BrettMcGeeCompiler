@@ -1,7 +1,7 @@
-%token IF FUNC ELSE WHILE RETURN INT VOID EXTERN VAR EQ LE GE NUM PRINT READ
 
 %{
 #include <stdio.h>
+#include "ast.h"
 void yyerror(const char *);
 extern int yylex();
 extern int yylex_destroy();
@@ -9,6 +9,21 @@ extern FILE *yyin;
 extern int yylineno;
 extern char* yytext;
 %}
+
+%union {
+	int ival;
+	char character;
+	char* sname;
+	astNode* npl;
+	vector<astNode*> *svec_ptr;
+}
+
+%token <ival> NUM
+%token <sname> VAR
+%token IF FUNC ELSE WHILE RETURN INT VOID EXTERN EQ LE GE PRINT READ NEQ
+
+%type <svec_ptr> stmts
+%type <npl> term expr stmt block_stmt
 
 %start program
 %nonassoc IFX
@@ -18,26 +33,26 @@ extern char* yytext;
 %nonassoc UMINUS
 
 %%
-term: VAR | NUM
+term: VAR {$$ = createVar($1);} | NUM {$$ = createCnst($1);}
 
-expr:
- term
- | '-' expr %prec UMINUS 
- | expr '+' expr 
- | expr '-' expr 
- | expr '*' expr 
- | expr '/' expr 
- | '(' expr ')'
+expr: '-' term %prec UMINUS {$$ = createUExpr($2, uminus);}
+ | term '+' term {$$ = createBExpr($1, $3, add);}
+ | term '-' term {$$ = createBExpr($1, $3, sub);}
+ | term '*' term {$$ = createBExpr($1, $3, mul);}
+ | term '/' term {$$ = createBExpr($1, $3, divide);}
+ | term
 
 condition: 
-	expr '>' expr
-	| expr '<' expr
-	| expr EQ expr
-	| expr GE expr
-	| expr LE expr
-	| '(' condition ')'
+	term '>' term {$$ = createRExpr($1, $3, gt);}
+	| term '<' term {$$ = createRExpr($1, $3, lt);}
+	| term EQ term {$$ = createRExpr($1, $3, eq);}
+	| term GE term {$$ = createRExpr($1, $3, ge);}
+	| term LE term {$$ = createRExpr($1, $3, le);}
+	| term NEQ term {$$ = createRExpr($1, $3, neq);}
 
-asgn_stmt: VAR '=' expr ';' | VAR '=' READ '(' ')' ';'
+asgn_stmt: VAR '=' expr ';' {astNode* tnptr = createVar($1);
+							 $$ = createAsgn(tnptr, $3);} 
+		   | VAR '=' READ '(' ')' ';' {$$ = createAsgn($1, $3);}
 
 if_stmt: IF condition stmt %prec IFX
 if_else_stmt: IF condition stmt  ELSE stmt
@@ -53,14 +68,17 @@ stmt: asgn_stmt
 	| call_statement
 	| return_statement
 
-stmts: stmts stmt | stmt
+stmts: stmts stmt {$$ = $1;
+				   $$->push_back($2);}
+	| stmt {$$ = new vector<astNode*> ();
+			$$->push_back($1);}
 
 decl: INT VAR ';'
 
 var_decls: var_decls decl
 	| /* empty */
 
-block_stmt: '{' var_decls stmts '}'
+block_stmt: '{' var_decls stmts '}' {$$ = createBlock($2); printNode($$);}
 
 func_header: INT FUNC '(' INT VAR ')'
 
