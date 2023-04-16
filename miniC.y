@@ -23,7 +23,7 @@ extern char* yytext;
 %token IF FUNC ELSE WHILE RETURN INT VOID EXTERN EQ LE GE PRINT READ NEQ
 
 %type <svec_ptr> stmts
-%type <npl> term expr stmt block_stmt
+%type <npl> term expr stmt block_stmt condition asgn_stmt if_stmt if_else_stmt while_loop call_statement return_statement declare_statement function_def extern_print extern_read extern program
 
 %start program
 %nonassoc IFX
@@ -54,43 +54,41 @@ asgn_stmt: VAR '=' expr ';' {astNode* tnptr = createVar($1);
 							 $$ = createAsgn(tnptr, $3);} 
 		   | VAR '=' READ '(' ')' ';' {$$ = createAsgn($1, $3);}
 
-if_stmt: IF condition stmt %prec IFX
-if_else_stmt: IF condition stmt  ELSE stmt
-while_loop: WHILE condition stmt
-call_statement: PRINT expr ';'
-return_statement: RETURN expr ';'
+if_stmt: IF condition stmt %prec IFX {$$ = createIF($2, $3, NULL);}
+if_else_stmt: IF condition stmt ELSE stmt {$$ = createIF($2, $3, $5);}
+while_loop: WHILE condition stmt {$$ = createWhile($2, $3);}
+call_statement: PRINT expr ';' {$$ = createCall($1, $2);}
+return_statement: RETURN expr ';' {$$ = createRet($2);}
 
-stmt: asgn_stmt
-	| if_stmt
-	| if_else_stmt
-	| while_loop
-	| block_stmt
-	| call_statement
-	| return_statement
+stmt: asgn_stmt {$$ = $1;}
+	| if_stmt {$$ = $1;}
+	| if_else_stmt {$$ = $1;}
+	| while_loop {$$ = $1;}
+	| block_stmt {$$ = $1;}
+	| call_statement {$$ = $1;}
+	| return_statement {$$ = $1;}
+	| declare_statement {$$ = $1;}
 
 stmts: stmts stmt {$$ = $1;
 				   $$->push_back($2);}
 	| stmt {$$ = new vector<astNode*> ();
 			$$->push_back($1);}
 
-decl: INT VAR ';'
+declare_statement: INT VAR ';' {$$ = createDecl($2);}
 
-var_decls: var_decls decl
-	| /* empty */
+block_stmt: '{' stmts '}' {$$ = createBlock($2);}
 
-block_stmt: '{' var_decls stmts '}' {$$ = createBlock($2); printNode($$);}
+function_def: INT VAR '(' INT VAR ')' block_stmt {$$ = createFunc($2, $5, $7);}
 
-func_header: INT FUNC '(' INT VAR ')'
+extern_read: EXTERN INT READ '(' ')' ';' {$$ = createExtern($3);}
 
-function_def: func_header block_stmt
+extern_print: EXTERN VOID PRINT '(' INT ')' ';' {$$ = createExtern($3);}
 
-extern_read: EXTERN INT READ '(' ')' ';'
+extern: extern_print {$$ = $1;}
+	| extern_read {$$ = $1;}
 
-extern_print: EXTERN VOID PRINT '(' INT ')' ';'
-
-extern: extern_print extern_read | extern_read extern_print
-
-program: extern function_def
+program: extern extern function_def {$$ = createProg($1, $2, $3);
+									 printNode($$);}
 %%
 
 int main(int argc, char** argv){
@@ -99,6 +97,7 @@ int main(int argc, char** argv){
 	}
 
 	yyparse();
+	//call semantic analysis function here
 
 	if (yyin != stdin)
 		fclose(yyin);
