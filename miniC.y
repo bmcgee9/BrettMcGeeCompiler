@@ -52,12 +52,15 @@ condition:
 
 asgn_stmt: VAR '=' expr ';' {astNode* tnptr = createVar($1);
 							 $$ = createAsgn(tnptr, $3);} 
-		   | VAR '=' READ '(' ')' ';' {$$ = createAsgn($1, $3);}
+		   | VAR '=' call_statement {astNode* tnptr = createVar($1);
+									 $$ = createAsgn(tnptr, $3);}
 
-if_stmt: IF condition stmt %prec IFX {$$ = createIF($2, $3, NULL);}
-if_else_stmt: IF condition stmt ELSE stmt {$$ = createIF($2, $3, $5);}
+if_stmt: IF condition stmt %prec IFX {$$ = createIf($2, $3, NULL);}
+if_else_stmt: IF condition stmt ELSE stmt {$$ = createIf($2, $3, $5);}
 while_loop: WHILE condition stmt {$$ = createWhile($2, $3);}
-call_statement: PRINT expr ';' {$$ = createCall($1, $2);}
+call_statement: PRINT expr ';' {$$ = createCall("print", $2);}
+				| READ '(' ')' ';' {$$ = createCall("read", NULL);}
+
 return_statement: RETURN expr ';' {$$ = createRet($2);}
 
 stmt: asgn_stmt {$$ = $1;}
@@ -78,11 +81,12 @@ declare_statement: INT VAR ';' {$$ = createDecl($2);}
 
 block_stmt: '{' stmts '}' {$$ = createBlock($2);}
 
-function_def: INT VAR '(' INT VAR ')' block_stmt {$$ = createFunc($2, $5, $7);}
+function_def: INT VAR '(' INT VAR ')' block_stmt {astNode* tmpvar = createVar($5);
+												  $$ = createFunc($2, tmpvar, $7);}
 
-extern_read: EXTERN INT READ '(' ')' ';' {$$ = createExtern($3);}
+extern_read: EXTERN INT READ '(' ')' ';' {$$ = createExtern("read");}
 
-extern_print: EXTERN VOID PRINT '(' INT ')' ';' {$$ = createExtern($3);}
+extern_print: EXTERN VOID PRINT '(' INT ')' ';' {$$ = createExtern("print");}
 
 extern: extern_print {$$ = $1;}
 	| extern_read {$$ = $1;}
