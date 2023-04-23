@@ -12,6 +12,7 @@ extern int yylex_destroy();
 extern FILE *yyin;
 extern int yylineno;
 extern char* yytext;
+astNode *root;
 %}
 
 %union {
@@ -98,7 +99,8 @@ extern: extern_print {$$ = $1;}
 	| extern_read {$$ = $1;}
 
 program: extern extern function_def {$$ = createProg($1, $2, $3);
-									 semanticAnalysis($$, NULL);}
+									 root = $$;
+									 }
 %%
 
 int main(int argc, char** argv){
@@ -108,13 +110,14 @@ int main(int argc, char** argv){
 
 	yyparse();
 	//call semantic analysis function here
-	//semanticAnalysis()
-
+	if (root != NULL){
+		semanticAnalysis(root, NULL);
+	}
 	if (yyin != stdin)
 		fclose(yyin);
 
 	yylex_destroy();
-	
+	freeNode(root);
 	return 0;
 }
 
@@ -125,7 +128,7 @@ void yyerror(const char *){
 
 void semanticAnalysis(astNode *node, vector<vector<char* >*> *vec){
 	assert(node != NULL);
-	
+	//printf("%d\n", node->type);
 	switch(node->type){
 		case ast_prog:{
 						//create stack of vectors
@@ -139,9 +142,11 @@ void semanticAnalysis(astNode *node, vector<vector<char* >*> *vec){
 						//printf("%sFunc: %s\n",indent, node->func.name);
 						if (node->func.param != NULL){
 							//printNode(node->func.param, n+1);
-							semanticAnalysis(node->func.param, vec);
+							//semanticAnalysis(node->func.param, vec);
+							vec->back()->push_back(node->func.param->var.name);
+							//printf("%s\n", node->func.param->var.name);
 						}
-						//printNode(node->func.body, n+1);
+						semanticAnalysis(node->func.body, vec);
 						break;
 					  }
 		case ast_stmt:{
@@ -158,12 +163,16 @@ void semanticAnalysis(astNode *node, vector<vector<char* >*> *vec){
 						//check to see if node->var.name is in stack
 						//output error if not
 						//iterate backwards through vectors
+						bool existing = false;
 						for (int i = vec->size()-1; 0 <= i; i--){
-							for (int k = vec->at(i)->size()-1; 0 <= k ; k++){
-								if (strcmp(vec->at(i)->at(k), node->var.name) != 0){
-									fprintf(stderr, "the variable used here has not been declared");
+							for (int k = vec->at(i)->size()-1; 0 <= k ; k--){
+								if (strcmp(vec->at(i)->at(k), node->var.name) == 0){
+									existing = true;
 								}
 							}
+						}
+						if (!(existing)){
+							fprintf(stderr, "The variable used here has not been declared (%s)\n", node->var.name);
 						}
 						//acts as an end of recursive path
 						break;
@@ -193,6 +202,13 @@ void semanticAnalysis(astNode *node, vector<vector<char* >*> *vec){
 				 	exit(1);
 				 }
 	}
+	/*printf("----------------------------\n");
+	for (int e = vec->size()-1; 0 <= e; e--){
+		for (int f = vec->at(e)->size()-1; 0 <= f ; f--){
+			printf("%s\n", (vec->at(e)->at(f))); 
+		}
+		printf("---\n");
+	}*/
 }
 void semanticAnalysisStmt(astStmt *stmt, vector<vector<char* >*> *vec){
 	assert(stmt != NULL);
@@ -247,6 +263,7 @@ void semanticAnalysisStmt(astStmt *stmt, vector<vector<char* >*> *vec){
 		case ast_decl:	{
 							//printf("%sDecl: %s\n", indent, stmt->decl.name);
 							vec->back()->push_back(stmt->decl.name);
+							//printf("%s\n", stmt->decl.name);
 							break;
 						}
 		default: {
