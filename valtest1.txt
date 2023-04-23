@@ -1,0 +1,43 @@
+==3814642== Memcheck, a memory error detector
+==3814642== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==3814642== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==3814642== Command: ./miniC.out ./examples/p1.c
+==3814642== 
+extern void print(int);
+extern int read();
+
+int func(int i){
+	int a;
+	int b;
+	
+  if (a < i){
+		while (b < i){
+			b = b + 20;
+		}
+		a = 10 + b;
+	}
+	else {
+		if (b < i) 
+			b = a;
+	}
+}
+==3814642== 
+==3814642== HEAP SUMMARY:
+==3814642==     in use at exit: 8 bytes in 4 blocks
+==3814642==   total heap usage: 108 allocs, 104 frees, 108,134 bytes allocated
+==3814642== 
+==3814642== 8 bytes in 4 blocks are definitely lost in loss record 1 of 1
+==3814642==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==3814642==    by 0x4B7E60E: strdup (strdup.c:42)
+==3814642==    by 0x10AB1E: yylex() (miniC.l:43)
+==3814642==    by 0x10CC3D: yyparse() (y.tab.c:1180)
+==3814642==    by 0x10D95A: main (miniC.y:133)
+==3814642== 
+==3814642== LEAK SUMMARY:
+==3814642==    definitely lost: 8 bytes in 4 blocks
+==3814642==    indirectly lost: 0 bytes in 0 blocks
+==3814642==      possibly lost: 0 bytes in 0 blocks
+==3814642==    still reachable: 0 bytes in 0 blocks
+==3814642==         suppressed: 0 bytes in 0 blocks
+==3814642== 
+==3814642== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)

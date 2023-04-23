@@ -38,37 +38,45 @@ astNode *root;
 %nonassoc UMINUS
 
 %%
-term: VAR {$$ = createVar($1);} | NUM {$$ = createCnst($1);}
+term: VAR {$$ = createVar($1); free($1);} | NUM {$$ = createCnst($1);}
 
-expr: '-' term %prec UMINUS {$$ = createUExpr($2, uminus);}
-	| term '+' term {$$ = createBExpr($1, $3, add);}
-	| term '-' term {$$ = createBExpr($1, $3, sub);}
-	| term '*' term {$$ = createBExpr($1, $3, mul);}
-	| term '/' term {$$ = createBExpr($1, $3, divide);}
+expr: '-' term %prec UMINUS {$$ = createUExpr($2, uminus);
+							//free($2);
+							}
+	| term '+' term {$$ = createBExpr($1, $3, add); /*free($1); free($3);*/}
+	| term '-' term {$$ = createBExpr($1, $3, sub); /*free($1); free($3);*/}
+	| term '*' term {$$ = createBExpr($1, $3, mul); /*free($1); free($3);*/}
+	| term '/' term {$$ = createBExpr($1, $3, divide); /*free($1); free($3);*/}
 	| term
 	| '(' expr ')' {$$ = $2;}
 
 condition: 
-	term '>' term {$$ = createRExpr($1, $3, gt);}
-	| term '<' term {$$ = createRExpr($1, $3, lt);}
-	| term EQ term {$$ = createRExpr($1, $3, eq);}
-	| term GE term {$$ = createRExpr($1, $3, ge);}
-	| term LE term {$$ = createRExpr($1, $3, le);}
-	| term NEQ term {$$ = createRExpr($1, $3, neq);}
+	term '>' term {$$ = createRExpr($1, $3, gt); /*free($1); free($3);*/}
+	| term '<' term {$$ = createRExpr($1, $3, lt); /*free($1); free($3);*/}
+	| term EQ term {$$ = createRExpr($1, $3, eq); /*free($1); free($3);*/}
+	| term GE term {$$ = createRExpr($1, $3, ge); /*free($1); free($3);*/}
+	| term LE term {$$ = createRExpr($1, $3, le); /*free($1); free($3);*/}
+	| term NEQ term {$$ = createRExpr($1, $3, neq); /*free($1); free($3);*/}
 	| '(' condition ')' {$$ = $2;}
 
 asgn_stmt: VAR '=' expr ';' {astNode* tnptr = createVar($1);
-							 $$ = createAsgn(tnptr, $3);} 
+							 $$ = createAsgn(tnptr, $3);
+							 free($1);
+							 //free($3);
+							 } 
 		   | VAR '=' call_statement {astNode* tnptr = createVar($1);
-									 $$ = createAsgn(tnptr, $3);}
+									 $$ = createAsgn(tnptr, $3);
+									 //free(tnptr);
+									 free($1);
+									 }
 
-if_stmt: IF condition stmt %prec IFX {$$ = createIf($2, $3, NULL);}
-if_else_stmt: IF condition stmt ELSE stmt {$$ = createIf($2, $3, $5);}
-while_loop: WHILE condition stmt {$$ = createWhile($2, $3);}
-call_statement: PRINT expr ';' {$$ = createCall("print", $2);}
+if_stmt: IF condition stmt %prec IFX {$$ = createIf($2, $3, NULL); /*free($2); free($3);*/}
+if_else_stmt: IF condition stmt ELSE stmt {$$ = createIf($2, $3, $5); /*free($2); free($3); free($5);*/}
+while_loop: WHILE condition stmt {$$ = createWhile($2, $3); /*free($2); free($3);*/}
+call_statement: PRINT expr ';' {$$ = createCall("print", $2); /*free($2);*/}
 				| READ '(' ')' ';' {$$ = createCall("read", NULL);}
 
-return_statement: RETURN expr ';' {$$ = createRet($2);}
+return_statement: RETURN expr ';' {$$ = createRet($2); /*free($2);*/}
 
 stmt: asgn_stmt {$$ = $1;}
 	| if_stmt {$$ = $1;}
@@ -80,16 +88,27 @@ stmt: asgn_stmt {$$ = $1;}
 	| declare_statement {$$ = $1;}
 
 stmts: stmts stmt {$$ = $1;
-				   $$->push_back($2);}
+				   $$->push_back($2);
+				   //free($2);
+				   }
 	| stmt {$$ = new vector<astNode*> ();
-			$$->push_back($1);}
+			$$->push_back($1);
+			//free($1);
+			}
 
-declare_statement: INT VAR ';' {$$ = createDecl($2);}
+declare_statement: INT VAR ';' {$$ = createDecl($2); 
+								free($2);
+								}
 
-block_stmt: '{' stmts '}' {$$ = createBlock($2);}
+block_stmt: '{' stmts '}' {$$ = createBlock($2);
+						   //free($2);
+						   }
 
 function_def: INT FUNC '(' INT VAR ')' block_stmt {astNode* tmpvar = createVar($5);
-												  $$ = createFunc("func", tmpvar, $7);}
+												  $$ = createFunc("func", tmpvar, $7);
+												  //free(tmpvar);
+												  free($5);
+												  }
 
 extern_read: EXTERN INT READ '(' ')' ';' {$$ = createExtern("read");}
 
@@ -100,6 +119,9 @@ extern: extern_print {$$ = $1;}
 
 program: extern extern function_def {$$ = createProg($1, $2, $3);
 									 root = $$;
+									 /*free($1);
+									 free($2);
+									 free($3);*/
 									 }
 %%
 
@@ -111,7 +133,19 @@ int main(int argc, char** argv){
 	yyparse();
 	//call semantic analysis function here
 	if (root != NULL){
-		semanticAnalysis(root, NULL);
+		vector<vector<char* >*> *tableVector = new vector<vector<char* >*> ();
+		semanticAnalysis(root, tableVector);
+		printf("----------------------------\n");
+		for (int e = tableVector->size()-1; 0 <= e; e--){
+			for (int f = tableVector->at(e)->size()-1; 0 <= f ; f--){
+				printf("%s\n", (tableVector->at(e)->at(f))); 
+			}
+			printf("---\n");
+		}
+		for (int i = tableVector->size()-1; 0 <= i; i--){
+			delete (tableVector->at(i));
+		}
+		delete (tableVector);
 	}
 	if (yyin != stdin)
 		fclose(yyin);
@@ -132,10 +166,10 @@ void semanticAnalysis(astNode *node, vector<vector<char* >*> *vec){
 	switch(node->type){
 		case ast_prog:{
 						//create stack of vectors
-						vector<vector<char* >*> *tableVector = new vector<vector<char* >*> ();
+						//vector<vector<char* >*> *tableVector = new vector<vector<char* >*> ();
 						vector<char* > *paramSymbols = new vector<char* > ();
-						tableVector->push_back(paramSymbols);
-						semanticAnalysis(node->prog.func, tableVector);
+						vec->push_back(paramSymbols);
+						semanticAnalysis(node->prog.func, vec);
 						break;
 					  }
 		case ast_func:{
