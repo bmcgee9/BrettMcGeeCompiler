@@ -104,11 +104,15 @@ block_stmt: '{' stmts '}' {$$ = createBlock($2);
 						   //free($2);
 						   }
 
-function_def: INT FUNC '(' INT VAR ')' block_stmt {astNode* tmpvar = createVar($5);
-												  $$ = createFunc("func", tmpvar, $7);
-												  //free(tmpvar);
-												  free($5);
+function_def: INT FUNC '(' INT VAR ')' block_stmt {
+													astNode* tmpvar = createVar($5);
+													$$ = createFunc("func", tmpvar, $7);
+													//free(tmpvar);
+													free($5);
 												  }
+			| INT FUNC '(' ')' block_stmt {
+											$$ = createFunc("func", NULL, $5);
+										  }
 
 extern_read: EXTERN INT READ '(' ')' ';' {$$ = createExtern("read");}
 
@@ -132,10 +136,11 @@ int main(int argc, char** argv){
 
 	yyparse();
 	//call semantic analysis function here
-	if (root != NULL){
+	semanticAnalysis(root, NULL);
+	/*if (root != NULL){
 		vector<vector<char* >*> *tableVector = new vector<vector<char* >*> ();
 		semanticAnalysis(root, tableVector);
-		printf("----------------------------\n");
+		/*printf("----------------------------\n");
 		for (int e = tableVector->size()-1; 0 <= e; e--){
 			for (int f = tableVector->at(e)->size()-1; 0 <= f ; f--){
 				printf("%s\n", (tableVector->at(e)->at(f))); 
@@ -146,7 +151,7 @@ int main(int argc, char** argv){
 			delete (tableVector->at(i));
 		}
 		delete (tableVector);
-	}
+	}*/
 	if (yyin != stdin)
 		fclose(yyin);
 
@@ -166,14 +171,17 @@ void semanticAnalysis(astNode *node, vector<vector<char* >*> *vec){
 	switch(node->type){
 		case ast_prog:{
 						//create stack of vectors
-						//vector<vector<char* >*> *tableVector = new vector<vector<char* >*> ();
-						vector<char* > *paramSymbols = new vector<char* > ();
-						vec->push_back(paramSymbols);
-						semanticAnalysis(node->prog.func, vec);
+						vector<vector<char* >*> *tableVector = new vector<vector<char* >*> ();
+						//vector<char* > *paramSymbols = new vector<char* > ();
+						//vec->push_back(paramSymbols);
+						semanticAnalysis(node->prog.func, tableVector);
+						delete (tableVector);
 						break;
 					  }
 		case ast_func:{
 						//printf("%sFunc: %s\n",indent, node->func.name);
+						vector<char* > *paramSymbols = new vector<char* > ();
+						vec->push_back(paramSymbols);
 						if (node->func.param != NULL){
 							//printNode(node->func.param, n+1);
 							//semanticAnalysis(node->func.param, vec);
@@ -181,6 +189,8 @@ void semanticAnalysis(astNode *node, vector<vector<char* >*> *vec){
 							//printf("%s\n", node->func.param->var.name);
 						}
 						semanticAnalysis(node->func.body, vec);
+						vec->pop_back();
+						delete (paramSymbols);
 						break;
 					  }
 		case ast_stmt:{
@@ -273,6 +283,8 @@ void semanticAnalysisStmt(astStmt *stmt, vector<vector<char* >*> *vec){
 								semanticAnalysis(*it, vec);
 								it++;
 							}
+							vec->pop_back();
+							delete (symbolTable);
 							break;
 						}
 		case ast_while: {
