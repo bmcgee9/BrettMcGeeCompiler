@@ -25,7 +25,7 @@ astNode *root;
 
 %token <ival> NUM
 %token <sname> VAR
-%token IF FUNC ELSE WHILE RETURN INT VOID EXTERN EQ LE GE PRINT READ NEQ
+%token IF ELSE WHILE RETURN INT VOID EXTERN EQ LE GE PRINT READ NEQ
 
 %type <svec_ptr> stmts
 %type <npl> term expr stmt block_stmt condition asgn_stmt if_stmt if_else_stmt while_loop call_statement return_statement declare_statement function_def extern_print extern_read extern program
@@ -104,14 +104,16 @@ block_stmt: '{' stmts '}' {$$ = createBlock($2);
 						   //free($2);
 						   }
 
-function_def: INT FUNC '(' INT VAR ')' block_stmt {
+function_def: INT VAR '(' INT VAR ')' block_stmt {
 													astNode* tmpvar = createVar($5);
-													$$ = createFunc("func", tmpvar, $7);
+													$$ = createFunc($2, tmpvar, $7);
 													//free(tmpvar);
 													free($5);
+													free($2);
 												  }
-			| INT FUNC '(' ')' block_stmt {
-											$$ = createFunc("func", NULL, $5);
+			| INT VAR '(' ')' block_stmt {	
+											$$ = createFunc($2, NULL, $5);
+											free($2);
 										  }
 
 extern_read: EXTERN INT READ '(' ')' ';' {$$ = createExtern("read");}

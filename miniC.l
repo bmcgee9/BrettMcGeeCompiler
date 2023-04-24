@@ -37,8 +37,6 @@ num [0-9]
 			return PRINT;}
 "read" {//printf("%s", yytext); 
 			 return READ;}
-"func" {//printf("%s", yytext); 
-			 return FUNC;}
 {letter}{alphanum}* {//printf("%s", yytext);
 						yylval.sname = strdup(yytext);
 						return VAR;}
