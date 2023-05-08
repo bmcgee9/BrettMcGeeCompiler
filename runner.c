@@ -19,6 +19,9 @@ int main(int argc, char** argv){
 	}
 
 	yyparse();
+	if (root == NULL){
+		printf("NULL Root\n");
+	}
 	printf("made it past parsing");
 	fflush(stdout);
 	//extern astNode* root;
