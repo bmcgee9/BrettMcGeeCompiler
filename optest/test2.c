@@ -1,6 +1,9 @@
-//Safety check for common subexpression elimination
+extern void print(int);
+extern int read();
+
 int func(int i){
- 	int a, b;
+ 	int a;
+	int b;
 	
 	a = i*10;
 	i = 20;

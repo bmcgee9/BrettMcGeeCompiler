@@ -61,14 +61,14 @@ int commonSubexprElim (LLVMBasicBlockRef bb){
 								int canReplace = 1;
 								for (LLVMValueRef instructionBtw = LLVMGetFirstInstruction(bb); instructionBtw; instructionBtw = LLVMGetNextInstruction(instructionBtw)){
 									//printf("between\n");
-									if (instructionBtw == instruction){
-										between = 1;
+									if ((instructionBtw == instruction) || (instructionBtw == instruction2)){
+										between++;
 										continue;
 									}
-									if (instructionBtw == instruction2){
+									/*if (instructionBtw == instruction2){
 										between = 0;
 										continue;
-									}
+									}*/
 									if (between == 1){
 										LLVMOpcode opcodeBtw = LLVMGetInstructionOpcode(instructionBtw);
 										if (opcodeBtw == LLVMStore){
@@ -177,7 +177,7 @@ int optimize(char* filename)
 	if (m != NULL){
 		//LLVMDumpModule(m);
 		makeOptimizations(m);
-		LLVMPrintModuleToFile(m, "optTest1.txt", NULL);
+		//LLVMPrintModuleToFile(m, "optTest.txt", NULL);
 	}
 	else {
 	    printf("module is NULL\n");
