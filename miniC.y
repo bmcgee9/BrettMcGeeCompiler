@@ -4,15 +4,14 @@
 #include "ast.h"
 #include <cassert>
 #include <cstring>
+//#include "globals.h"
 void yyerror(const char *);
-void semanticAnalysis(astNode *node, vector<vector<char* >*> *vec);
-void semanticAnalysisStmt(astStmt *stmt, vector<vector<char* >*> *vec);
 extern int yylex();
 extern int yylex_destroy();
 extern FILE *yyin;
 extern int yylineno;
 extern char* yytext;
-astNode *root;
+astNode* root;
 %}
 
 %union {
@@ -125,13 +124,11 @@ extern: extern_print {$$ = $1;}
 
 program: extern extern function_def {$$ = createProg($1, $2, $3);
 									 root = $$;
-									 /*free($1);
-									 free($2);
-									 free($3);*/
 									 }
 %%
 
-int main(int argc, char** argv){
+/*int main(int argc, char** argv){
+	mainFunc(argc, argv);
 	if (argc == 2){
 		yyin = fopen(argv[1], "r");
 	}
@@ -139,10 +136,10 @@ int main(int argc, char** argv){
 	yyparse();
 	//call semantic analysis function here
 	semanticAnalysis(root, NULL);
-	/*if (root != NULL){
+	if (root != NULL){
 		vector<vector<char* >*> *tableVector = new vector<vector<char* >*> ();
 		semanticAnalysis(root, tableVector);
-		/*printf("----------------------------\n");
+		printf("----------------------------\n");
 		for (int e = tableVector->size()-1; 0 <= e; e--){
 			for (int f = tableVector->at(e)->size()-1; 0 <= f ; f--){
 				printf("%s\n", (tableVector->at(e)->at(f))); 
@@ -153,7 +150,7 @@ int main(int argc, char** argv){
 			delete (tableVector->at(i));
 		}
 		delete (tableVector);
-	}*/
+	}
 	if (yyin != stdin)
 		fclose(yyin);
 
@@ -248,13 +245,13 @@ void semanticAnalysis(astNode *node, vector<vector<char* >*> *vec){
 				 	exit(1);
 				 }
 	}
-	/*printf("----------------------------\n");
+	printf("----------------------------\n");
 	for (int e = vec->size()-1; 0 <= e; e--){
 		for (int f = vec->at(e)->size()-1; 0 <= f ; f--){
 			printf("%s\n", (vec->at(e)->at(f))); 
 		}
 		printf("---\n");
-	}*/
+	}
 }
 void semanticAnalysisStmt(astStmt *stmt, vector<vector<char* >*> *vec){
 	assert(stmt != NULL);
@@ -319,4 +316,4 @@ void semanticAnalysisStmt(astStmt *stmt, vector<vector<char* >*> *vec){
 				 	exit(1);
 				 }
 	}
-}
+} */
