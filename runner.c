@@ -22,13 +22,13 @@ int main(int argc, char** argv){
 	if (root == NULL){
 		printf("NULL Root\n");
 	}
-	printf("made it past parsing");
-	fflush(stdout);
+	//printf("made it past parsing");
+	//fflush(stdout);
 	//extern astNode* root;
 	//call semantic analysis function here
 	int i = semanticAnalysis(root, NULL);
-	printf("made it past semantic analysis");
-	fflush(stdout);
+	//printf("made it past semantic analysis");
+	//fflush(stdout);
 	if (i == 1 && argv[2] != NULL){
 		optimize(argv[2]);
 	}

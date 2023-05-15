@@ -10,5 +10,6 @@ LLVMModuleRef createLLVMModel(char * filename);
 int commonSubexprElim (LLVMBasicBlockRef bb);
 int deleteDeadCode(LLVMBasicBlockRef bb);
 int constantFolding(LLVMBasicBlockRef bb);
+int constProp(LLVMValueRef function);
 void makeOptimizations(LLVMModuleRef module);
 int optimize(char* filename);

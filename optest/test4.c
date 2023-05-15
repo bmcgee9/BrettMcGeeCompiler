@@ -1,6 +1,10 @@
-//Constant folding
+extern void print(int);
+extern int read();
+
 int func(){
- 	int a, b,c;
+ 	int a;
+	int b;
+	int c;
 	
 	a = 10;
 	b = 20;	
