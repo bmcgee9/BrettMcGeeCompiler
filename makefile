@@ -1,6 +1,6 @@
 source = miniC
 TEST = ./optimize_test/test
-FUNCS = runner.c y.tab.c lex.yy.c ast.c semanticC.c optimizer.c
+FUNCS = runner.cpp y.tab.c lex.yy.c ast.cpp semanticC.cpp optimizer.cpp
 CFLAGS = -pedantic -g `llvm-config-15 --cxxflags --ldflags --libs core` -I /usr/include/llvm-c-15/
 $(source).out: $(source).l $(source).y
 	yacc -d -v $(source).y
@@ -10,6 +10,13 @@ $(source).out: $(source).l $(source).y
 	
 llvm_file: $(TEST).c
 	clang -S -emit-llvm $(TEST).c -o bigfinaltest.ll
+
+reg_alloc: 
+	clang++ -pedantic -g `llvm-config-15 --cxxflags --ldflags --libs core` -I /usr/include/llvm-c-15/ -c codegen.cpp
+	clang++ -pedantic -g `llvm-config-15 --cxxflags --ldflags --libs core` -I /usr/include/llvm-c-15/ codegen.o -o reg_alloc.out
+
+clean_reg_alloc:
+	rm codegen.o reg_alloc.out
 
 optTest:
 	clang -pedantic -g `llvm-config-15 --cflags` -I /usr/include/llvm-c-15/ -c optimizer.c
