@@ -2,6 +2,7 @@
 #include "ast.h"
 #include "semanticC.h"
 #include "optimizer.h"
+#include "codegen.h"
 #include "runner.h"
 #include "y.tab.h"
 //#include "globals.h"
@@ -19,6 +20,7 @@ int main(int argc, char** argv){
 	}
 
 	yyparse();
+	//printf("parsed\n");
 	if (root == NULL){
 		printf("NULL Root\n");
 	}
@@ -27,10 +29,14 @@ int main(int argc, char** argv){
 	//extern astNode* root;
 	//call semantic analysis function here
 	int i = semanticAnalysis(root, NULL);
-	//printf("made it past semantic analysis");
-	//fflush(stdout);
+	// printf("made it past semantic analysis");
+	// fflush(stdout);
 	if (i == 1 && argv[2] != NULL){
-		optimize(argv[2]);
+		//printf("made it to optimize\n");
+		LLVMModuleRef m = optimize(argv[2]);
+		// const char* filename = "optimizedP1.ll";
+		// LLVMPrintModuleToFile(m, filename, NULL);
+		runCodegen(m);
 	}
 	if (yyin != stdin)
 		fclose(yyin);

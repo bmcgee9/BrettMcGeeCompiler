@@ -19,6 +19,7 @@ int semanticAnalysis(astNode *node, vector<vector<char* >*> *vec){
 						if (semanticAnalysis(node->prog.func, tableVector) == 1){
 							delete (tableVector);
 							return 1;
+
 						} else {
 							delete (tableVector);
 							return 0;
@@ -133,9 +134,11 @@ int semanticAnalysisStmt(astStmt *stmt, vector<vector<char* >*> *vec){
 								//check if param is in any symbol tables on stack
 								if (semanticAnalysis(stmt->call.param, vec) == 1){
 									return 1;
+								} else {
+									return 0;
 								}
 							}
-							return 0;
+							return 1;
 							//break;
 						}
 		case ast_ret: {

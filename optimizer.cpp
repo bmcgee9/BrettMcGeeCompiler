@@ -103,7 +103,7 @@ int deleteDeadCode(LLVMBasicBlockRef bb){
     for (LLVMValueRef instruction = LLVMGetFirstInstruction(bb); instruction; instruction = LLVMGetNextInstruction(instruction)) {
         LLVMOpcode opcode = LLVMGetInstructionOpcode(instruction);
 		//printf("toplevelDeadCode\n");
-        if (opcode != LLVMStore && opcode != LLVMRet && opcode != LLVMBr && opcode != LLVMSwitch && opcode != LLVMIndirectBr && opcode != LLVMInvoke && opcode != LLVMUnreachable && opcode != LLVMCallBr && opcode != LLVMAlloca){
+        if (opcode != LLVMStore && opcode != LLVMRet && opcode != LLVMBr && opcode != LLVMSwitch && opcode != LLVMIndirectBr && opcode != LLVMInvoke && opcode != LLVMUnreachable && opcode != LLVMCallBr && opcode != LLVMAlloca && opcode != LLVMCall){
             if (LLVMGetFirstUse(instruction) == NULL){
                 LLVMInstructionEraseFromParent(instruction);
 				//printf("returned1DeadCode\n");
@@ -371,7 +371,7 @@ void makeOptimizations(LLVMModuleRef module){
  	}
 }
 
-int optimize(char* filename)
+LLVMModuleRef optimize(char* filename)
 {
 	LLVMModuleRef m;
 
@@ -380,13 +380,13 @@ int optimize(char* filename)
 	if (m != NULL){
 		//LLVMDumpModule(m);
 		makeOptimizations(m);
-		LLVMPrintModuleToFile(m, "optTestFINAL.txt", NULL);
+		//LLVMPrintModuleToFile(m, "optTestFINAL.txt", NULL);
 	}
 	else {
 	    printf("module is NULL\n");
 	}
 	
-	return 0;
+	return (m);
 }
 
 /*int main(int argc, char** argv)

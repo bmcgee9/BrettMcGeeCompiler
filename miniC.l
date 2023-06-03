@@ -40,7 +40,7 @@ num [0-9]
 {letter}{alphanum}* {//printf("%s", yytext);
 						yylval.sname = strdup(yytext);
 						return VAR;}
-[1-9]{num}* {//printf("%s", yytext);
+{num}+ {//printf("%s", yytext);
 			 yylval.ival = atoi(yytext);
 			 return NUM;}
 ">" {//printf("%s", yytext); 

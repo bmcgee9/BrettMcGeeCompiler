@@ -12,4 +12,4 @@ int deleteDeadCode(LLVMBasicBlockRef bb);
 int constantFolding(LLVMBasicBlockRef bb);
 int constProp(LLVMValueRef function);
 void makeOptimizations(LLVMModuleRef module);
-int optimize(char* filename);
+LLVMModuleRef optimize(char* filename);
